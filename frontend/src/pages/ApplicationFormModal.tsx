@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, errorMessage } from '../api/client'
 import { todayIso } from '../api/useStatuses'
-import type { ApplicationDetail, ApplicationPayload } from '../api/types'
+import type { ApplicationDetail, ApplicationPayload, JobImportResponse } from '../api/types'
 import { Modal } from '../components/Modal'
 import { Button, ErrorNote, Field, Input, Textarea } from '../components/ui'
 
@@ -35,9 +35,15 @@ export function ApplicationFormModal({
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
+  const [importUrl, setImportUrl] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [importNote, setImportNote] = useState<string | null>(null)
+
   useEffect(() => {
     if (!open) return
     setError(null)
+    setImportUrl('')
+    setImportNote(null)
     setForm({
       companyName: existing?.companyName ?? '',
       roleName: existing?.roleName ?? '',
@@ -49,6 +55,34 @@ export function ApplicationFormModal({
   }, [open, existing])
 
   const update = (patch: Partial<ApplicationPayload>) => setForm((prev) => ({ ...prev, ...patch }))
+
+  // Best-effort autofill (MVP.md IMP-01..03). Only ever fills fields the user
+  // hasn't already typed something into — a paste should never clobber input.
+  const handleImport = async () => {
+    const url = importUrl.trim()
+    if (!url || importing) return
+
+    setImportNote(null)
+    setImporting(true)
+    try {
+      const { data } = await api.post<JobImportResponse>('/job-imports', { url })
+
+      const patch: Partial<ApplicationPayload> = {}
+      if (data.companyName && !form.companyName.trim()) patch.companyName = data.companyName
+      if (data.roleName && !form.roleName.trim()) patch.roleName = data.roleName
+      if (data.jobDescription && !(form.jobDescription ?? '').trim()) patch.jobDescription = data.jobDescription
+
+      if (Object.keys(patch).length > 0) {
+        update(patch)
+      } else {
+        setImportNote("Couldn't find job details on that page automatically — please fill them in below.")
+      }
+    } catch (err) {
+      setImportNote(errorMessage(err, 'Could not fetch that page.'))
+    } finally {
+      setImporting(false)
+    }
+  }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -96,6 +130,30 @@ export function ApplicationFormModal({
     >
       <form id="application-form" onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         {error && <ErrorNote>{error}</ErrorNote>}
+
+        {!editing && (
+          <div className="flex flex-col gap-2 rounded-md border border-dashed border-line-strong p-3">
+            <Field
+              label="Paste a job link"
+              htmlFor="importUrl"
+              hint="LinkedIn, JobStreet, or a Workday careers page. Fills in whatever it can find below — review before saving."
+            >
+              <div className="flex gap-2">
+                <Input
+                  id="importUrl"
+                  type="url"
+                  placeholder="https://"
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                />
+                <Button type="button" loading={importing} disabled={!importUrl.trim()} onClick={handleImport}>
+                  Fetch details
+                </Button>
+              </div>
+            </Field>
+            {importNote && <ErrorNote>{importNote}</ErrorNote>}
+          </div>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Company" htmlFor="companyName">

@@ -82,6 +82,13 @@ export interface DashboardResponse {
   recentApplications: ApplicationListItem[]
 }
 
+/** Best-effort result of POST /job-imports. Any field may be null if extraction failed. */
+export interface JobImportResponse {
+  companyName: string | null
+  roleName: string | null
+  jobDescription: string | null
+}
+
 export interface ApplicationPayload {
   companyName: string
   roleName: string

@@ -23,6 +23,9 @@ public final class ErrorCodes {
     public static final String RESUME_NOT_FOUND = "RESUME_NOT_FOUND";
     public static final String STORAGE_FAILURE = "STORAGE_FAILURE";
 
+    public static final String JOB_URL_UNSUPPORTED = "JOB_URL_UNSUPPORTED";
+    public static final String JOB_URL_UNREACHABLE = "JOB_URL_UNREACHABLE";
+
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
 
     private ErrorCodes() {

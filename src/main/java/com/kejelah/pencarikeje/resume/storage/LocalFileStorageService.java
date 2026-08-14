@@ -4,6 +4,7 @@ import com.kejelah.pencarikeje.common.ApiException;
 import com.kejelah.pencarikeje.common.ErrorCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,13 @@ import java.util.UUID;
  * <p>The stored name is always a generated UUID. The user-facing name lives in
  * {@code applications.resume_filename} instead, which removes filename collisions
  * and filename-based traversal risk entirely.
+ *
+ * <p>This is the default storage provider; it requires a persistent, writable
+ * disk. On hosts with an ephemeral filesystem, set {@code app.storage.provider=supabase}
+ * to switch to {@link SupabaseFileStorageService} instead.
  */
 @Service
+@ConditionalOnProperty(prefix = "app.storage", name = "provider", havingValue = "local", matchIfMissing = true)
 public class LocalFileStorageService implements FileStorageService {
 
     private static final Logger log = LoggerFactory.getLogger(LocalFileStorageService.class);

@@ -46,10 +46,13 @@ The system deliberately does **not** enforce a status workflow. Any status may f
 | 8 | Single PDF resume per application (upload, view, download, replace) |
 | 9 | Dashboard statistics scoped to the authenticated user |
 | 10 | Strict per-user data isolation on every read and write |
+| 11 | Best-effort job posting import from a pasted LinkedIn, JobStreet, or Workday URL |
 
 ### 2.2 Out of Scope
 
-Email notifications · calendar integration · AI features · job scraping · job-board integrations (LinkedIn, JobStreet) · shared boards · social features · admin dashboard · multiple resumes per application · multiple portals per application · advanced analytics · mobile app · microservices · Redis · Kafka · Kubernetes.
+Email notifications · calendar integration · AI features · shared boards · social features · admin dashboard · multiple resumes per application · multiple portals per application · advanced analytics · mobile app · microservices · Redis · Kafka · Kubernetes.
+
+Job scraping and job-board integrations (LinkedIn, JobStreet) were originally listed here as deferred; §4.7 un-defers a narrow, best-effort slice of that (three named platforms, prefill only, no persistence of the source page).
 
 Rationale: at 5–8 users, none of these earn their operational cost. They are deferred, not rejected.
 
@@ -216,6 +219,19 @@ AC: ownership is verified **before** the file is opened. A non-owner receives `4
 **PRO-02** — `PUT /api/profile` updates name only. Email is read-only in the MVP (changing it would require a re-verification flow that is out of scope).
 **PRO-03** — `PUT /api/profile/password` requires `currentPassword`, `newPassword`, `confirmPassword`. Incorrect `currentPassword` returns `400`. The existing JWT remains valid until expiry (no session invalidation in MVP — documented limitation).
 
+### 4.7 Job Posting Import
+
+**IMP-01 — Fetch and extract**
+`POST /api/job-imports` takes `{ "url": string }`, fetches it server-side, and extracts company name, role title, and job description from the page's `schema.org JobPosting` JSON-LD structured data (the SEO markup most job boards embed for Google Jobs). One generic extractor covers all supported platforms rather than a scraper per site.
+AC: any or all of the three fields may come back `null` — extraction is best-effort, not guaranteed.
+
+**IMP-02 — Domain restriction**
+The URL's host must match an allowlist (LinkedIn, the JobStreet/SEEK ccTLD family, `*.myworkdayjobs.com`), checked before any network call. Redirects are not followed. Both are SSRF mitigations, not just feature scoping — a rejected host or a redirect response are both treated as failures.
+AC: a non-allowlisted host returns `400 JOB_URL_UNSUPPORTED` and no outbound request is made.
+
+**IMP-03 — Prefill only, never autosave**
+Extracted fields prefill the create-application form for the user to review and edit. Nothing is persisted by this endpoint, and fields the user has already typed into are never overwritten.
+
 ---
 
 ## 5. Database Schema
@@ -340,6 +356,7 @@ Base path: `/api`. All request and response bodies are JSON except resume upload
 | POST | `/applications/{id}/resume` | ✔ | Upload/replace resume (multipart) |
 | GET | `/applications/{id}/resume` | ✔ | Stream PDF |
 | GET | `/statuses` | ✔ | Active status catalogue |
+| POST | `/job-imports` | ✔ | Best-effort extraction from a job posting URL |
 | GET | `/profile` | ✔ | Current user profile |
 | PUT | `/profile` | ✔ | Update name |
 | PUT | `/profile/password` | ✔ | Change password |

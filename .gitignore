@@ -35,5 +35,9 @@ build/
 ### Claude Code ###
 .claude/settings.local.json
 
+### Secrets and local runtime state ###
+.env
+/uploads/
+
 ### Stray IntelliJ scaffold (separate project, own git repo) ###
 /untitled/

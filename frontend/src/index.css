@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+/*
+ * Warm slate + terracotta.
+ *
+ * Neutrals carry a warm undertone so the interface reads calm rather than
+ * clinical; the single terracotta accent is reserved for actions and the
+ * current point in a timeline. Status colour is carried by dots and text, never
+ * by filled backgrounds, so a dense table stays quiet.
+ */
+@theme {
+  --color-canvas: #faf8f5;
+  --color-surface: #ffffff;
+  --color-line: #e5e0d8;
+  --color-line-strong: #d6cfc3;
+  --color-ink: #1c1917;
+  --color-muted: #78716c;
+  --color-faint: #a8a29e;
+
+  --color-accent: #c05621;
+  --color-accent-hover: #9c4419;
+  --color-accent-soft: #fdf1e9;
+
+  --color-positive: #2f7d5d;
+  --color-negative: #a83232;
+  --color-neutralish: #6b7280;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html {
+  background-color: var(--color-canvas);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible focus everywhere, in the accent colour (WCAG 2.1 AA). */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

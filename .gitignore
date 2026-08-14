@@ -38,6 +38,7 @@ build/
 ### Secrets and local runtime state ###
 .env
 /uploads/
+*.log
 
 ### Stray IntelliJ scaffold (separate project, own git repo) ###
 /untitled/

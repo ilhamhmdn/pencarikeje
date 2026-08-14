@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>Each endpoint that takes an application id is probed with the wrong owner's
  * token.
  */
-class DataIsolationIntegrationTest extends AbstractIntegrationTest {
+class DataIsolationIT extends AbstractIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;

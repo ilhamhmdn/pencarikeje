@@ -116,6 +116,26 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+			<!--
+			  Unit tests (*Test) run on `mvn test` with no external dependencies.
+			  Integration tests (*IT) start a real PostgreSQL via Testcontainers
+			  and therefore need a Docker daemon, so they are bound to `verify`
+			  instead. Keeping them apart means a missing Docker install cannot
+			  make the ordinary build look broken.
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
